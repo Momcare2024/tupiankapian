@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Prompt Configuration
+    // 为了防止标题被篡改，我们通过字符串替换将用户标题强制注入到 System Prompt 中
+    // 这样 AI 就会认为这个标题是任务指令的一部分，从而严格遵守
     let systemPrompt = ""
+    const safeTitle = title.replace(/"/g, '\\"').replace(/\n/g, ' '); // 简单的转义处理
     
     if (template === 'deep') {
         systemPrompt = `# Role: 全球育儿理论“翻译官” & 新手妈妈的科学闺蜜
@@ -51,8 +54,9 @@ export async function POST(request: NextRequest) {
 
 *请严格按以下格式输出，用于制作封面图：*
 
-1.  **大标题**：格式：\`# [痛点/场景] + [颠覆认知] + [数字] + [结果]\`
-    **（必须控制在 15 个字以内）**
+1.  **大标题**：# ${safeTitle}
+    (注意：这是硬性指令，生成的 Markdown 第一行必须完全等于 "# ${safeTitle}"，禁止修改任何标点或文字)
+    
 
 2.  **镇楼金句**：格式：\`> "[真实名言内容]" —— [作者]\`用中文展示
 
@@ -99,7 +103,7 @@ export async function POST(request: NextRequest) {
 * **互动提问**：用一句轻松的话引导评论。
 
 **返回格式示例（纯文本 Markdown - 不要包含任何其他文字）：**
-# [这里填大标题]
+# ${safeTitle}
 
 > "金句..." —— 作者
 
@@ -147,11 +151,11 @@ export async function POST(request: NextRequest) {
 要求：
 1. 图片1（封面）：
    - **必须严格包含三部分内容**，顺序如下，且每部分之间**必须用空行**隔开：
-     1. **第一行必须是大标题**：格式：'# 标题内容'（例如：# 为什么越懂事的孩子越不快乐？）
+     1. **第一行必须是大标题**：必须严格输出 '# ${safeTitle}'。禁止修改、润色或添加任何标点符号。
      2. **第二部分是金句**：格式：'> "金句内容" —— 作者'
      3. **第三部分是独白**：**60-90字**以内观点简述，阐述标题所表达的核心理念。观点要辛辣/犀利直接的揭露一个反常识的观点，并且具有很强的洞察力。表达方式要用温柔但内核坚硬的方式。
    - **Markdown 源码示例**（严格照抄此格式）：
-     '# 标题内容\\n\\n> "金句内容" —— 作者\\n\\n这里是独白内容...'
+     '# ${safeTitle}\\n\\n> "金句内容" —— 作者\\n\\n这里是独白内容...'
    - **禁止**在第一行使用 '##' 或其他符号，必须是 '# ' 开头。
 
 2. 图片2-6（核心内容）：
@@ -175,7 +179,7 @@ export async function POST(request: NextRequest) {
 
 返回格式严格如下（JSON数组，共7项）：
 [
-  "# 封面标题\\n\\n> 金句...\\n\\n独白内容...",
+  "# ${safeTitle}\\n\\n> 金句...\\n\\n独白内容...",
   "## 维度一：...\\n\\n> 金句...\\n\\n正文段落1...\\n\\n正文段落2...\\n\\n正文段落3...",
   "## 维度二：...\\n\\n> 金句...\\n\\n正文段落1...\\n\\n正文段落2...\\n\\n正文段落3...",
   "## 维度三：...\\n\\n> 金句...\\n\\n正文段落1...\\n\\n正文段落2...\\n\\n正文段落3...",
@@ -189,10 +193,10 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: "Bearer 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",
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.0-flash-001",
         messages: [
           {
             role: "system",
@@ -207,7 +211,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (!response.ok) {
-      throw new Error("API 请求失败")
+      const errorText = await response.text()
+      console.error("OpenRouter API Error:", response.status, errorText)
+      throw new Error(`API 请求失败: ${response.status} ${errorText}`)
     }
 
     const data = await response.json()
