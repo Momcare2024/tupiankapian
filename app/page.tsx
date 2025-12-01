@@ -6,12 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { CardPreview } from "@/components/card-preview"
 import { DeepReadingCard } from "@/components/deep-reading-card"
-import { Loader2, Download, LayoutTemplate, BookOpen } from "lucide-react"
+import { Loader2, Download, LayoutTemplate, BookOpen, UserCircle } from "lucide-react"
 import { toPng } from "html-to-image"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function Home() {
   const [title, setTitle] = useState("")
   const [template, setTemplate] = useState<'classic' | 'deep'>('classic')
+  const [persona, setPersona] = useState('parenting')
   const [cards, setCards] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null)
@@ -197,7 +199,8 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           title: title.trim(),
-          template: template 
+          template: template,
+          persona: template === 'deep' ? persona : undefined
         }),
       })
 
@@ -211,6 +214,11 @@ export default function Home() {
           setCards(paginatedCards);
       } else {
           setCards(data.cards)
+      }
+      
+      // 如果有错误信息，虽然成功但可能有部分警告
+      if (data.error) {
+        console.warn(data.error)
       }
       
     } catch (error) {
@@ -289,53 +297,83 @@ export default function Home() {
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <h2 className="text-xl font-semibold mb-4">配置与输入</h2>
               
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">选择模版</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setTemplate('classic')}
-                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
-                      template === 'classic'
-                        ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
-                    }`}
-                  >
-                    <LayoutTemplate className="w-4 h-4" />
-                    <span className="text-sm font-medium">经典模版</span>
-                  </button>
-                  <button
-                    onClick={() => setTemplate('deep')}
-                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
-                      template === 'deep'
-                        ? 'border-amber-500 bg-amber-50 text-amber-700 ring-1 ring-amber-500'
-                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
-                    }`}
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="text-sm font-medium">深度解析模版</span>
-                  </button>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">选择模版</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setTemplate('classic')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
+                        template === 'classic'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                          : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                      }`}
+                    >
+                      <LayoutTemplate className="w-4 h-4" />
+                      <span className="text-sm font-medium">经典模版</span>
+                    </button>
+                    <button
+                      onClick={() => setTemplate('deep')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
+                        template === 'deep'
+                          ? 'border-amber-500 bg-amber-50 text-amber-700 ring-1 ring-amber-500'
+                          : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                      }`}
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      <span className="text-sm font-medium">深度解析模版</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <h3 className="text-sm font-medium text-gray-700 mb-2">输入标题</h3>
-              <div className="flex gap-2">
-                <Input
-                  placeholder={template === 'classic' ? "例如：毫无保留的爱" : "例如：如何深度思考？"}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                  className="flex-1"
-                />
-                <Button onClick={handleGenerate} disabled={loading || !title.trim()}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      生成中
-                    </>
-                  ) : (
-                    "生成"
-                  )}
-                </Button>
+                {template === 'deep' && (
+                  <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <div className="flex items-center gap-2">
+                        <UserCircle className="w-4 h-4" />
+                        目标人群 / 写作人设
+                      </div>
+                    </label>
+                    <Select value={persona} onValueChange={setPersona}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="选择目标人群" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="parenting">👶 育儿专家 (默认)</SelectItem>
+                        <SelectItem value="0-3_mom">🍼 0-3岁宝妈群体</SelectItem>
+                        <SelectItem value="3-8_mom">🎒 3-8岁宝妈群体</SelectItem>
+                        <SelectItem value="wellness">🧘‍♀️ 养生人群</SelectItem>
+                        <SelectItem value="sophisticated">💄 精致生活女孩</SelectItem>
+                        <SelectItem value="household">🏠 家庭日用百货</SelectItem>
+                        <SelectItem value="pet">🐾 养宠人群</SelectItem>
+                        <SelectItem value="growth">🧠 硬核女性成长 (安·兰德 x 毛选)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">输入标题</h3>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder={template === 'classic' ? "例如：毫无保留的爱" : "例如：如何深度思考？"}
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleGenerate} disabled={loading || !title.trim()}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          生成中
+                        </>
+                      ) : (
+                        "生成"
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 
