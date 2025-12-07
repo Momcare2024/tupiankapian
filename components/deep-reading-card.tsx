@@ -40,7 +40,10 @@ export function DeepReadingCard({ content, index, total }: DeepReadingCardProps)
         elements.push(
           <h1
             key={lineIndex}
-            className="text-[52px] leading-[1.15] font-extrabold text-[#8B3A1F] mb-8 tracking-wider text-left"
+            className="text-[52px] leading-[1.15] font-extrabold text-[#8B3A1F] mb-8 mt-6 tracking-wider text-left"
+            style={{
+              display: 'inline-block',
+            }}
           >
             {line.slice(2)}
           </h1>,

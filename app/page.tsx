@@ -23,9 +23,39 @@ export default function Home() {
 
   // Helper: Render a single line to HTML string (simplified Markdown support)
   const renderLineToHtml = (line: string, isFirstPage: boolean) => {
-    // H1 - Match DeepReadingCard
+    if (template === 'classic') {
+      // Classic Template Styles (Match CardPreview)
+      if (line.startsWith("# ")) {
+        return `<h1 class="text-[24px] leading-snug font-bold text-[#111827] mb-3 tracking-tight ${isFirstPage ? "text-center px-2" : "text-left"}">${line.slice(2)}</h1>`
+      }
+      if (line.startsWith("## ")) {
+        return `<h2 class="text-[20px] font-bold text-[#111827] mb-2 tracking-tight border-l-4 border-[#111827] pl-3">${line.slice(3)}</h2>`
+      }
+      if (line.startsWith("> ")) {
+        if (isFirstPage) {
+          return `<div class="mb-4 flex gap-4 justify-center border-y border-gray-100 py-3 mx-2"><blockquote class="text-[14px] text-[#4b5563] leading-6 italic text-center px-2">${line.slice(2)}</blockquote></div>`
+        } else {
+          return `<div class="mb-4 flex gap-4 justify-center py-1"><blockquote class="text-[13px] text-gray-600 font-medium bg-gray-50 rounded-lg w-full mx-0 px-4 py-2 text-left border border-gray-100">${line.slice(2)}</blockquote></div>`
+        }
+      }
+      if (/^\d+\./.test(line)) {
+        const match = line.match(/^(\d+)\.\s*(.+)$/)
+        if (match) {
+          let content = match[2];
+          content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#111827]">$1</span>');
+          return `<div class="flex gap-2.5 mb-2.5 items-start text-justify group"><span class="font-mono text-[14px] font-bold text-white shrink-0 leading-5 mt-0.5 bg-[#111827] w-5 h-5 flex items-center justify-center rounded-full text-[11px] shadow-sm">${match[1]}</span><p class="text-[13px] leading-snug text-[#374151] font-normal tracking-wide pt-0">${content}</p></div>`
+        }
+      }
+      // Regular paragraph
+      let content = line;
+      content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#111827]">$1</span>');
+      return `<p class="${isFirstPage ? "text-[13px] leading-relaxed text-[#4b5563] mb-0 text-justify" : "text-[13px] leading-snug mb-2.5 text-[#374151] text-justify"} font-normal tracking-wide">${content}</p>`
+    }
+
+    // Deep Template Styles (Match DeepReadingCard)
+    // H1 - Match DeepReadingCard (Added mt-6 for more top spacing)
     if (line.startsWith("# ")) {
-      return `<h1 class="text-[52px] leading-[1.15] font-extrabold text-[#8B3A1F] mb-8 tracking-wider text-left">${line.slice(2)}</h1>`
+      return `<h1 class="text-[52px] leading-[1.15] font-extrabold text-[#8B3A1F] mb-8 mt-6 tracking-wider text-left">${line.slice(2)}</h1>`
     }
     // H2 - Match DeepReadingCard
     if (line.startsWith("## ")) {
@@ -69,8 +99,10 @@ export default function Home() {
     // Available Height for Content (Page N) = 500 - 54 - 4 = 442px
     // Available Height for Content (Page 1) = 500 - 70 - 4 = 426px
 
-    const SAFE_HEIGHT_PAGE_1 = 426;
-    const SAFE_HEIGHT_PAGE_N = 442;
+    // Dynamic Height Calculation based on Template
+    // Adjusted: Increased slightly to allow one more line at bottom (435px), while cover has reduced height due to top spacing check
+    const SAFE_HEIGHT_PAGE_1 = template === 'classic' ? 260 : 410; // Slightly increased from 400
+    const SAFE_HEIGHT_PAGE_N = template === 'classic' ? 420 : 435; // Increased from 420 to allow more text
 
     // Pre-process: Split by paragraphs first
     const rawParagraphs = fullText.split('\n');
@@ -200,7 +232,7 @@ export default function Home() {
         body: JSON.stringify({
           title: title.trim(),
           template: template,
-          persona: template === 'deep' ? persona : undefined
+          persona: persona  // 两个模版都传递 persona
         }),
       })
 
@@ -208,13 +240,10 @@ export default function Home() {
 
       const data = await response.json()
 
-      if (template === 'deep') {
-        const fullContent = data.cards[0];
-        const paginatedCards = calculatePages(fullContent);
-        setCards(paginatedCards);
-      } else {
-        setCards(data.cards)
-      }
+      // 两个模版都使用自动分页
+      const fullContent = data.cards[0];
+      const paginatedCards = calculatePages(fullContent);
+      setCards(paginatedCards);
 
       // 如果有错误信息，虽然成功但可能有部分警告
       if (data.error) {
@@ -324,31 +353,29 @@ export default function Home() {
                   </div>
                 </div>
 
-                {template === 'deep' && (
-                  <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <div className="flex items-center gap-2">
-                        <UserCircle className="w-4 h-4" />
-                        目标人群 / 写作人设
-                      </div>
-                    </label>
-                    <Select value={persona} onValueChange={setPersona}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="选择目标人群" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="parenting">👶 育儿专家 (默认)</SelectItem>
-                        <SelectItem value="0-3_mom">🍼 0-3岁宝妈群体</SelectItem>
-                        <SelectItem value="3-8_mom">🎒 3-8岁宝妈群体</SelectItem>
-                        <SelectItem value="wellness">🧘‍♀️ 养生人群</SelectItem>
-                        <SelectItem value="sophisticated">💄 精致生活女孩</SelectItem>
-                        <SelectItem value="household">🏠 家庭日用百货</SelectItem>
-                        <SelectItem value="pet">🐾 养宠人群</SelectItem>
-                        <SelectItem value="growth">🧠 硬核女性成长 (安·兰德 x 毛选)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center gap-2">
+                      <UserCircle className="w-4 h-4" />
+                      目标人群 / 写作人设
+                    </div>
+                  </label>
+                  <Select value={persona} onValueChange={setPersona}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="选择目标人群" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="parenting">👶 育儿专家 (默认)</SelectItem>
+                      <SelectItem value="0-3_mom">🍼 0-3岁宝妈群体</SelectItem>
+                      <SelectItem value="3-8_mom">🎒 3-8岁宝妈群体</SelectItem>
+                      <SelectItem value="wellness">🧘‍♀️ 养生人群</SelectItem>
+                      <SelectItem value="sophisticated">💄 精致生活女孩</SelectItem>
+                      <SelectItem value="household">🏠 家庭日用百货</SelectItem>
+                      <SelectItem value="pet">🐾 养宠人群</SelectItem>
+                      <SelectItem value="growth">🧠 硬核女性成长 (安·兰德 x 毛选)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-2">输入标题</h3>
