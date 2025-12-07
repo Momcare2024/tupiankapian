@@ -17,28 +17,28 @@ export default function Home() {
   const [cards, setCards] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [downloadingIndex, setDownloadingIndex] = useState<number | null>(null)
-  
+
   // Ref for the hidden measurement container
   const measureRef = useRef<HTMLDivElement>(null)
 
   // Helper: Render a single line to HTML string (simplified Markdown support)
   const renderLineToHtml = (line: string, isFirstPage: boolean) => {
-    // H1 - Match DeepReadingCard: text-[#8B3A1F] mb-6
+    // H1 - Match DeepReadingCard
     if (line.startsWith("# ")) {
-      return `<h1 class="text-[42px] leading-[1.1] font-extrabold text-[#8B3A1F] mb-6 tracking-tight text-left">${line.slice(2)}</h1>`
+      return `<h1 class="text-[52px] leading-[1.15] font-extrabold text-[#8B3A1F] mb-8 tracking-wider text-left">${line.slice(2)}</h1>`
     }
-    // H2 - Match DeepReadingCard: text-[#8B3A1F] mb-2 mt-6
+    // H2 - Match DeepReadingCard
     if (line.startsWith("## ")) {
-      return `<h2 class="text-[20px] font-bold text-[#8B3A1F] mb-2 mt-6 tracking-tight">${line.slice(3)}</h2>`
+      return `<h2 class="text-[18px] font-bold text-[#8B3A1F] mb-3 mt-6 tracking-normal">${line.slice(3)}</h2>`
     }
-    // Quote - Match DeepReadingCard: text-[#5D4037] mb-4
+    // Quote - Match DeepReadingCard
     if (line.startsWith("> ")) {
-      return `<blockquote class="${isFirstPage ? "text-[14px]" : "text-[14px]"} leading-relaxed text-[#5D4037] italic mb-4 pl-6 border-l-[4px] border-[#D7CCC8] py-1">${line.slice(2)}</blockquote>`
+      return `<blockquote class="${isFirstPage ? "text-[13px]" : "text-[13px]"} leading-[1.7] text-[#6D5D52] italic mb-5 pl-5 border-l-[3px] border-[#C8B8A8] py-0.5">${line.slice(2)}</blockquote>`
     }
-    // Paragraph - Match DeepReadingCard: text-[#3D2E29] mb-2
+    // Paragraph - Match DeepReadingCard
     let content = line;
     content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#5D4037]">$1</span>');
-    return `<p class="${isFirstPage ? "text-[14px]" : "text-[14px]"} leading-[1.8] text-[#3D2E29] mb-2 text-justify tracking-wide font-normal">${content}</p>`
+    return `<p class="${isFirstPage ? "text-[13px]" : "text-[13px]"} leading-[1.75] text-[#6B5344] mb-2 text-justify tracking-normal font-normal">${content}</p>`
   }
 
   // Expert Level Pagination Logic: Measure DOM Height
@@ -46,97 +46,97 @@ export default function Home() {
     if (!measureRef.current) return [fullText];
 
     const container = measureRef.current;
-    
+
     // Helper to get height of a candidate page content
     const getHeight = (items: string[], isFirst: boolean) => {
-       container.innerHTML = items.map(l => renderLineToHtml(l, isFirst)).join('');
-       return container.scrollHeight;
+      container.innerHTML = items.map(l => renderLineToHtml(l, isFirst)).join('');
+      return container.scrollHeight;
     };
 
     const pages: string[] = [];
     let currentPageItems: string[] = [];
     let isFirstPage = true;
-    
+
     // Constants for height calculation (must match DeepReadingCard)
     // Total Height: 500px
     // Top Space Inner: mt-10 (40) + h-1.5 (6) + mb-2 (8) = 54px
     // Top Space Cover: mt-14 (56) + h-1.5 (6) + mb-2 (8) = 70px
     // Footer Space: Removed (0px)
     // Content Padding Bottom: pb-1 (4px)
-    
+
     // Since we reduced paragraph margin (mb-4 -> mb-2) and heading margin,
     // the actual content density is higher, so we just need to ensure the container height is correct.
     // Available Height for Content (Page N) = 500 - 54 - 4 = 442px
     // Available Height for Content (Page 1) = 500 - 70 - 4 = 426px
-    
+
     const SAFE_HEIGHT_PAGE_1 = 426;
     const SAFE_HEIGHT_PAGE_N = 442;
 
     // Pre-process: Split by paragraphs first
     const rawParagraphs = fullText.split('\n');
-    
+
     // Queue of content chunks to process
     let queue = [...rawParagraphs];
-    
+
     while (queue.length > 0) {
       const item = queue.shift(); // Take one block
       if (!item || !item.trim()) continue; // Skip empty lines
-      
+
       // Special Rule: Force break BEFORE the first H2 (## ) if we are on the first page.
       // This ensures the cover page only contains Title + Quote + Intro.
       if (isFirstPage && item.startsWith("## ") && currentPageItems.length > 0) {
-         // Detect first H2 on page 1 -> Finalize Page 1 immediately.
-         pages.push(currentPageItems.join('\n'));
-         currentPageItems = [];
-         isFirstPage = false;
-         // Process this H2 on the new page (next iteration)
-         queue.unshift(item);
-         continue;
+        // Detect first H2 on page 1 -> Finalize Page 1 immediately.
+        pages.push(currentPageItems.join('\n'));
+        currentPageItems = [];
+        isFirstPage = false;
+        // Process this H2 on the new page (next iteration)
+        queue.unshift(item);
+        continue;
       }
 
       // Try adding this whole block to current page
       currentPageItems.push(item);
-      
+
       const currentHeight = getHeight(currentPageItems, isFirstPage);
       const maxHeight = isFirstPage ? SAFE_HEIGHT_PAGE_1 : SAFE_HEIGHT_PAGE_N;
-      
+
       if (currentHeight <= maxHeight) {
         // Fits! Continue to next item.
         continue;
       }
-      
+
       // It doesn't fit.
       // Remove it from current page.
       currentPageItems.pop();
-      
+
       // If it's a Heading or Blockquote (starts with # or >), we generally shouldn't split it inside.
       // Just push current page and move this item to next page.
       if (item.startsWith('#') || item.startsWith('>')) {
-         if (currentPageItems.length > 0) {
-             pages.push(currentPageItems.join('\n'));
-             currentPageItems = [];
-             isFirstPage = false;
-             // Put the item back in queue to be processed for next page
-             queue.unshift(item);
-         } else {
-             // Edge case: A single heading is taller than the whole page? 
-             // Or empty page. Just force it in.
-             pages.push(item);
-             isFirstPage = false;
-         }
-         continue;
+        if (currentPageItems.length > 0) {
+          pages.push(currentPageItems.join('\n'));
+          currentPageItems = [];
+          isFirstPage = false;
+          // Put the item back in queue to be processed for next page
+          queue.unshift(item);
+        } else {
+          // Edge case: A single heading is taller than the whole page? 
+          // Or empty page. Just force it in.
+          pages.push(item);
+          isFirstPage = false;
+        }
+        continue;
       }
-      
+
       // It's a paragraph (or simple text). We need to split it.
       let low = 0;
       let high = item.length;
       let splitIndex = 0;
-      
+
       // Binary search for the perfect cut point
       while (low <= high) {
         const mid = Math.floor((low + high) / 2);
         const subItem = item.slice(0, mid);
-        
+
         // Test
         const testItems = [...currentPageItems, subItem];
         if (getHeight(testItems, isFirstPage) <= maxHeight) {
@@ -146,46 +146,46 @@ export default function Home() {
           high = mid - 1;
         }
       }
-      
+
       // Smart split optimization
       let bestSplit = splitIndex;
-      const lookBackLimit = 10; 
+      const lookBackLimit = 10;
       for (let k = 0; k < lookBackLimit && (bestSplit - k) > 0; k++) {
-         const char = item[bestSplit - k];
-         if ([' ', '，', '。', '！', '？', '\n'].includes(char)) {
-             bestSplit = bestSplit - k + 1; 
-             break;
-         }
+        const char = item[bestSplit - k];
+        if ([' ', '，', '。', '！', '？', '\n'].includes(char)) {
+          bestSplit = bestSplit - k + 1;
+          break;
+        }
       }
-      
+
       if (bestSplit <= 0) bestSplit = splitIndex;
       if (bestSplit === 0 && currentPageItems.length === 0) {
-          bestSplit = Math.min(item.length, 50); 
+        bestSplit = Math.min(item.length, 50);
       }
 
       const part1 = item.slice(0, bestSplit);
       const part2 = item.slice(bestSplit);
-      
+
       if (part1.trim()) {
         currentPageItems.push(part1);
       }
-      
+
       // Finalize current page
       pages.push(currentPageItems.join('\n'));
       currentPageItems = [];
       isFirstPage = false;
-      
+
       // Put the rest back into queue
       if (part2.trim()) {
         queue.unshift(part2);
       }
     }
-    
+
     // Flush last page
     if (currentPageItems.length > 0) {
-       pages.push(currentPageItems.join('\n'));
+      pages.push(currentPageItems.join('\n'));
     }
-    
+
     return pages;
   }
 
@@ -197,7 +197,7 @@ export default function Home() {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           title: title.trim(),
           template: template,
           persona: template === 'deep' ? persona : undefined
@@ -207,20 +207,20 @@ export default function Home() {
       if (!response.ok) throw new Error("生成失败")
 
       const data = await response.json()
-      
+
       if (template === 'deep') {
-          const fullContent = data.cards[0];
-          const paginatedCards = calculatePages(fullContent);
-          setCards(paginatedCards);
+        const fullContent = data.cards[0];
+        const paginatedCards = calculatePages(fullContent);
+        setCards(paginatedCards);
       } else {
-          setCards(data.cards)
+        setCards(data.cards)
       }
-      
+
       // 如果有错误信息，虽然成功但可能有部分警告
       if (data.error) {
         console.warn(data.error)
       }
-      
+
     } catch (error) {
       console.error("Generate error:", error)
       alert("生成失败，请重试")
@@ -246,7 +246,7 @@ export default function Home() {
       const dataUrl = await toPng(cardElement, {
         cacheBust: true,
         pixelRatio: 3, // 保持高清
-        backgroundColor: template === 'deep' ? "#FAF9F6" : "#ffffff", // Updated to new bg color
+        backgroundColor: template === 'deep' ? "#FAF8F3" : "#ffffff", // 更新为极浅暖白色背景
       })
 
       const link = document.createElement("a")
@@ -273,13 +273,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 relative">
       {/* Hidden Measurement Container */}
-      <div 
+      <div
         ref={measureRef}
         className="fixed top-0 left-0 pointer-events-none opacity-0 z-[-1] flex flex-col"
         style={{
-            width: '375px', // Same as card width
-            paddingLeft: '32px', // px-8
-            paddingRight: '32px', // px-8
+          width: '375px', // Same as card width
+          paddingLeft: '32px', // px-8
+          paddingRight: '32px', // px-8
         }}
       >
         {/* Content will be injected here for measurement */}
@@ -296,29 +296,27 @@ export default function Home() {
           <div className="space-y-6">
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <h2 className="text-xl font-semibold mb-4">配置与输入</h2>
-              
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">选择模版</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setTemplate('classic')}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
-                        template === 'classic'
-                          ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-600'
-                      }`}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${template === 'classic'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 ring-1 ring-blue-500'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                        }`}
                     >
                       <LayoutTemplate className="w-4 h-4" />
                       <span className="text-sm font-medium">经典模版</span>
                     </button>
                     <button
                       onClick={() => setTemplate('deep')}
-                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${
-                        template === 'deep'
-                          ? 'border-amber-500 bg-amber-50 text-amber-700 ring-1 ring-amber-500'
-                          : 'border-gray-200 hover:bg-gray-50 text-gray-600'
-                      }`}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${template === 'deep'
+                        ? 'border-amber-500 bg-amber-50 text-amber-700 ring-1 ring-amber-500'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                        }`}
                     >
                       <BookOpen className="w-4 h-4" />
                       <span className="text-sm font-medium">深度解析模版</span>

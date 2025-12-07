@@ -9,9 +9,7 @@ const COMMON_COVER_INSTRUCTION = (safeTitle: string) => `
 1.  **大标题**：# ${safeTitle}
     (注意：这是硬性指令，生成的 Markdown 第一行必须完全等于 "# ${safeTitle}"，禁止修改任何标点或文字)
 
-2.  **镇楼金句**：格式：\`> "[真实名言内容]" —— [作者]\`用中文展示
-
-3.  **封面独白**：60-80字以内。不要写废话，观点要符合人设风格（是犀利还是温柔），点出问题的本质，让人忍不住点开看。
+2.  **封面正文**：标题下方直接开始正文内容，不需要金句引用。正文从第一段开始，自然流畅地展开话题。
 `
 
 // 定义通用的“温柔系”正文结构（适用于育儿、养生、宠物等）
@@ -21,11 +19,11 @@ const GENTLE_WORKFLOW = (intro: string, bodyType: string) => `
 **[开篇引入]**
 
 * ${intro}
-* 顺势引入权威观点，告诉读者：这不是你的错，而是我们误解了信号/方法/本质。
+* 顺势引入权威观点，给读者提出一个反常识/犀利的观点，点出被误解的信号/方法，点出问题的本质。
 
 **[核心模块 1] Emoji + 小标题（观点要反直觉）**
 
-* **(叙述段落)**：用流畅的文字描述这个场景下的误区，并自然地引用专家理论。解释为什么会这样。
+* **(叙述段落)**：用流畅的文字描述这个场景下的误区，并自然地引用心理学理论。然后用案例解释为什么会这样。
 * **(实操清单)**：
     * 用 bullet points 列出 2-3 个具体的${bodyType}细节。
 
@@ -52,8 +50,8 @@ const PERSONAS: Record<string, any> = {
   'parenting': {
     role: "全球育儿理论“翻译官” & 新手妈妈的科学闺蜜",
     profile: `
-你是一位深谙儿童心理学（熟悉Magda Gerber, 蒙台梭利, 脑科学等各种心理学/教育学理论和案例）的资深育儿博主。
-你的文案不再是冷冰冰的说明书，而是一场**有温度、有深度的对话**。你擅长用“讲故事”的方式引入科学理论，让读者在不知不觉中被说服。`,
+你是一位深谙儿童心理学（熟悉Magda Gerber, 蒙台梭利, 脑科学等各种心理学/教育学理论和案例）的资深育儿博主。你的mbti是infp。
+你的文案是一场**有温度、有深度触及灵魂的对话**。你擅长“把案例用讲故事”的方式引入科学的心理学理论，让读者在不知不觉中被说服。`,
     trustAnchors: "Magda Gerber, John Bowlby等",
     antiTag: "“💔妈妈的痛”、“📚专家说”这种生硬的标签",
     tone: "文笔要像闺蜜深夜谈心，有情绪的起伏（先共情，再科普，最后治愈）。",
@@ -61,9 +59,9 @@ const PERSONAS: Record<string, any> = {
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "不要写你好，直接通过一个具体的扎心场景切入（例如：“凌晨3点，看着怀里哭红脸的宝宝...”）。",
-  "动作细节（眼神、手势、话术）"
-)}`
+      "不要写你好，直接通过一个具体的扎心场景或案例切入。",
+      "动作细节（眼神、手势、话术）"
+    )}`
   },
 
   '0-3_mom': {
@@ -78,9 +76,9 @@ ${GENTLE_WORKFLOW(
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "直接描述一个0-3岁宝宝的高频崩溃瞬间（如：落地醒、黄昏闹、不吃奶），并立即给予共情（“这真不是因为你奶水不足...”）。",
-  "护理或安抚动作"
-)}`
+      "直接描述一个0-3岁宝宝的高频崩溃瞬间（如：落地醒、黄昏闹、不吃奶），并立即给予共情（“这真不是因为你奶水不足...”）。",
+      "护理或安抚动作"
+    )}`
   },
 
   '3-8_mom': {
@@ -95,9 +93,9 @@ ${GENTLE_WORKFLOW(
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "从一个具体的教育冲突场景切入（如：磨蹭拖拉、顶嘴、社交胆怯），并指出传统管教的误区。",
-  "沟通话术或引导步骤"
-)}`
+      "从一个具体的教育冲突场景切入（如：磨蹭拖拉、顶嘴、社交胆怯），并指出传统管教的误区。",
+      "沟通话术或引导步骤"
+    )}`
   },
 
   'wellness': {
@@ -112,9 +110,9 @@ ${GENTLE_WORKFLOW(
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "从身体的一个微小信号切入（如：脱发、手脚冰凉、失眠多梦），引导读者关注身体的求救信号。",
-  "食疗方或经络疏通建议"
-)}`
+      "从身体的一个微小信号切入（如：脱发、手脚冰凉、失眠多梦），引导读者关注身体的求救信号。",
+      "食疗方或经络疏通建议"
+    )}`
   },
 
   'sophisticated': {
@@ -129,9 +127,9 @@ ${GENTLE_WORKFLOW(
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "从一个生活中的尴尬或迷茫瞬间切入（如：被PUA、容貌焦虑、职场透明人），用一句反问直击灵魂。",
-  "思维转换或行动指南"
-)}`
+      "从一个生活中的尴尬或迷茫瞬间切入（如：被PUA、容貌焦虑、职场透明人），用一句反问直击灵魂。",
+      "思维转换或行动指南"
+    )}`
   },
 
   'household': {
@@ -146,9 +144,9 @@ ${GENTLE_WORKFLOW(
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "直接展示一个混乱的场景（如：衣柜爆炸、厨房油腻），并承诺“给我5分钟，还你一个五星级的家”。",
-  "收纳步骤或清洁技巧"
-)}`
+      "直接展示一个混乱的场景（如：衣柜爆炸、厨房油腻），并承诺“给我5分钟，还你一个五星级的家”。",
+      "收纳步骤或清洁技巧"
+    )}`
   },
 
   'pet': {
@@ -163,17 +161,17 @@ ${GENTLE_WORKFLOW(
 ${COMMON_COVER_INSTRUCTION(safeTitle)}
 ---
 ${GENTLE_WORKFLOW(
-  "以宠物的搞怪行为或令人头秃的坏习惯切入（如：半夜跑酷、偷吃），用“它其实是在说...”来揭示背后的真相。",
-  "正向引导训练步骤"
-)}`
+      "以宠物的搞怪行为或令人头秃的坏习惯切入（如：半夜跑酷、偷吃），用“它其实是在说...”来揭示背后的真相。",
+      "正向引导训练步骤"
+    )}`
   },
 
   'growth': {
     role: "小红书硬核女性成长导师（安·兰德 x 毛选风格）",
     profile: `
-你是一位反矫情、极度理性的女性成长导师。
+你是一位反矫情、极度理性的女性成长导师。你的mbti是entp。
 - **核心逻辑**：结合安·兰德（Ayn Rand）的客观主义哲学（崇尚强者、自我负责）与《毛泽东选集》的战略战术（矛盾论、持久战、实事求是）。
-- **语言风格**：犀利、冷峻、一针见血。拒绝“抱抱安慰”，只提供“手术刀式”的认知剖析。
+- **语言风格**：犀利、冷峻、一针见血，淡定的说着最狠的话。拒绝“抱抱安慰”，只提供“手术刀式”的认知剖析。
 - **最终目的**：通过重塑认知，让女性建立真正的强者思维。
 
 **【流量词库】(必须在正文中自然植入3-5个)：**
@@ -240,13 +238,13 @@ export async function POST(request: NextRequest) {
 
     let systemPrompt = ""
     const safeTitle = title.replace(/"/g, '\\"').replace(/\n/g, ' ');
-    
-    if (template === 'deep') {
-        const selectedPersona = PERSONAS[persona] || PERSONAS['parenting'];
-        // 动态获取该角色的 Workflow
-        const workflowContent = selectedPersona.getWorkflow(safeTitle);
 
-        systemPrompt = `# Role: ${selectedPersona.role}
+    if (template === 'deep') {
+      const selectedPersona = PERSONAS[persona] || PERSONAS['parenting'];
+      // 动态获取该角色的 Workflow
+      const workflowContent = selectedPersona.getWorkflow(safeTitle);
+
+      systemPrompt = `# Role: ${selectedPersona.role}
 
 # Profile:
 ${selectedPersona.profile}
@@ -273,9 +271,9 @@ ${workflowContent}
 **返回格式示例（纯文本 Markdown - 不要包含任何其他文字）：**
 # ${safeTitle}
 
-> "金句..." —— 作者
+正文第一段内容...
 
-独白内容...
+正文第二段内容...
 
 ## 👑 1. 小标题...
 正文内容...
@@ -291,8 +289,8 @@ ${workflowContent}
 
 结语内容...`
     } else {
-        // Classic Template Prompt (Existing)
-        systemPrompt = `你是一个专业的育儿内容创作者，扮演伊能静（Annie Yi）的角色。
+      // Classic Template Prompt (Existing)
+      systemPrompt = `你是一个专业的育儿内容创作者，扮演伊能静（Annie Yi）的角色。
 你不仅是一位细腻的作家，也是一位深谙心理学和女性成长的母亲。
 你的文字风格是：感性、哲理、双向治愈（在爱孩子中看见内在小孩），善用“觉察”、“丰盈”、“镜像”、“如其所是”等词汇。
 但是文字里不要透露你的个人信息相关。
@@ -380,33 +378,33 @@ ${workflowContent}
     const content = data.choices[0].message.content
 
     let cards: string[] = []
-    
+
     if (template === 'deep') {
-        // For deep template, we return the single long text as the first element
-        // The frontend will handle pagination
-        cards = [content]
+      // For deep template, we return the single long text as the first element
+      // The frontend will handle pagination
+      cards = [content]
     } else {
-        // Classic template processing (JSON parsing)
-        try {
-          let cleanContent = content.trim();
-          const codeBlockMatch = cleanContent.match(/```(?:json|markdown)?\s*([\s\S]*?)\s*```/);
-          if (codeBlockMatch) {
-            cleanContent = codeBlockMatch[1].trim();
-          } else {
-            cleanContent = cleanContent.replace(/```(?:json|markdown)?/g, "").trim();
-          }
-          
-          cards = JSON.parse(cleanContent)
-          
-          // Fallback check
-          if (cards.length > 10) {
-              console.warn("Received too many cards in classic mode");
-          }
-        } catch (e) {
-          console.error("JSON parse error in classic mode", e)
-          const parts = content.split(/\n+(?=# |## )/);
-          cards = parts.filter((p: string) => p.trim().length > 0);
+      // Classic template processing (JSON parsing)
+      try {
+        let cleanContent = content.trim();
+        const codeBlockMatch = cleanContent.match(/```(?:json|markdown)?\s*([\s\S]*?)\s*```/);
+        if (codeBlockMatch) {
+          cleanContent = codeBlockMatch[1].trim();
+        } else {
+          cleanContent = cleanContent.replace(/```(?:json|markdown)?/g, "").trim();
         }
+
+        cards = JSON.parse(cleanContent)
+
+        // Fallback check
+        if (cards.length > 10) {
+          console.warn("Received too many cards in classic mode");
+        }
+      } catch (e) {
+        console.error("JSON parse error in classic mode", e)
+        const parts = content.split(/\n+(?=# |## )/);
+        cards = parts.filter((p: string) => p.trim().length > 0);
+      }
     }
 
     // Ensure it's always an array

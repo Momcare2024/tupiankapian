@@ -40,7 +40,7 @@ export function DeepReadingCard({ content, index, total }: DeepReadingCardProps)
         elements.push(
           <h1
             key={lineIndex}
-            className="text-[42px] leading-[1.1] font-extrabold text-[#8B3A1F] mb-6 tracking-tight text-left"
+            className="text-[52px] leading-[1.15] font-extrabold text-[#8B3A1F] mb-8 tracking-wider text-left"
           >
             {line.slice(2)}
           </h1>,
@@ -51,7 +51,7 @@ export function DeepReadingCard({ content, index, total }: DeepReadingCardProps)
         elements.push(
           <h2
             key={lineIndex}
-            className="text-[20px] font-bold text-[#8B3A1F] mb-2 mt-6 tracking-tight"
+            className="text-[18px] font-bold text-[#8B3A1F] mb-3 mt-6 tracking-normal"
           >
             {line.slice(3)}
           </h2>,
@@ -62,9 +62,8 @@ export function DeepReadingCard({ content, index, total }: DeepReadingCardProps)
         elements.push(
           <blockquote
             key={lineIndex}
-            className={`${
-              isFirst ? "text-[14px]" : "text-[14px]"
-            } leading-relaxed text-[#5D4037] italic mb-4 pl-6 border-l-[4px] border-[#D7CCC8] py-1`}
+            className={`${isFirst ? "text-[13px]" : "text-[13px]"
+              } leading-[1.7] text-[#6D5D52] italic mb-5 pl-5 border-l-[3px] border-[#C8B8A8] py-0.5`}
           >
             {parseInline(line.slice(2))}
           </blockquote>,
@@ -75,9 +74,8 @@ export function DeepReadingCard({ content, index, total }: DeepReadingCardProps)
         elements.push(
           <p
             key={lineIndex}
-            className={`${
-              isFirst ? "text-[14px]" : "text-[14px]"
-            } leading-[1.8] text-[#3D2E29] mb-2 text-justify tracking-wide font-normal`}
+            className={`${isFirst ? "text-[13px]" : "text-[13px]"
+              } leading-[1.75] text-[#6B5344] mb-2 text-justify tracking-normal font-normal`}
           >
             {parseInline(line)}
           </p>,
@@ -95,15 +93,14 @@ export function DeepReadingCard({ content, index, total }: DeepReadingCardProps)
       style={{
         width: "375px",
         height: "500px", // 3:4 aspect ratio
-        backgroundColor: "#FFFCF5", // 极浅暖米色，精确复刻对标图背景
+        backgroundColor: "#FAF8F3", // 极浅暖白色，更接近参考图
       }}
     >
       {/* Top Decorative Line */}
-      {/* Reduced margins for more compact look */}
-      <div className={`w-16 h-1.5 bg-[#D7CCC8] ml-8 mb-2 ${isFirst ? "mt-14" : "mt-10"}`} />
+      <div className={`w-16 h-1.5 bg-[#D7CCC8] ml-8 mb-4 ${isFirst ? "mt-8" : "mt-8"}`} />
 
       {/* Content */}
-      <div className="flex-1 px-8 flex flex-col pb-1">
+      <div className="flex-1 px-8 flex flex-col pb-2">
         {renderContent()}
       </div>
     </div>
