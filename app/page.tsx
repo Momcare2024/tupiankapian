@@ -30,46 +30,46 @@ export default function Home() {
     const trimmedLine = line.trim();
 
     if (template === 'classic') {
-      // Classic Template Styles (Match CardPreview)
+      // Classic Template Styles (Updated to match new Serif design)
       if (trimmedLine === "---" || trimmedLine === "***") {
-        return `<div class="w-full h-px bg-gray-200 my-4"></div>`
+        return `<div class="w-full h-px bg-gray-300 my-6"></div>`
       }
       if (/^####\s*/.test(trimmedLine)) {
         const content = trimmedLine.replace(/^####\s*/, '');
-        return `<h4 class="text-[16px] font-bold text-[#111827] mb-2 mt-2 tracking-tight">${content}</h4>`
+        return `<h4 class="text-[15px] font-bold text-[#374151] mb-4 mt-6 tracking-wide font-serif">${content}</h4>`
       }
       if (/^###\s*/.test(trimmedLine)) {
         const content = trimmedLine.replace(/^###\s*/, '');
-        return `<h3 class="text-[18px] font-bold text-[#111827] mb-2 mt-3 tracking-tight">${content}</h3>`
+        return `<h3 class="text-[18px] font-bold text-[#111827] mb-4 mt-8 tracking-wide font-serif">${content}</h3>`
       }
       if (/^##\s*/.test(trimmedLine)) {
         const content = trimmedLine.replace(/^##\s*/, '');
-        return `<h2 class="text-[20px] font-bold text-[#111827] mb-2 tracking-tight border-l-4 border-[#111827] pl-3">${content}</h2>`
+        return `<h2 class="text-[20px] font-bold text-[#111827] mb-6 mt-8 tracking-wide font-serif">${content}</h2>`
       }
       if (/^#\s*/.test(trimmedLine) && !/^##/.test(trimmedLine)) {
         const content = trimmedLine.replace(/^#\s*/, '');
-        return `<h1 class="text-[24px] leading-snug font-bold text-[#111827] mb-3 tracking-tight ${isFirstPage ? "text-center px-2" : "text-left"}">${content}</h1>`
+        let html = `<h1 class="font-serif text-[30px] leading-[1.2] font-bold text-[#111827] mb-6 tracking-wide ${isFirstPage ? "mt-0 text-left" : "mt-8 text-left"}">${content}</h1>`;
+        if (isFirstPage) {
+          html += `<div class="w-full h-px bg-gray-300 mb-6"></div>`;
+        }
+        return html;
       }
       if (/^>\s*/.test(trimmedLine)) {
         const content = trimmedLine.replace(/^>\s*/, '');
-        if (isFirstPage) {
-          return `<div class="mb-4 flex gap-4 justify-center border-y border-gray-100 py-3 mx-2"><blockquote class="text-[14px] text-[#4b5563] leading-6 italic text-center px-2">${content}</blockquote></div>`
-        } else {
-          return `<div class="mb-4 flex gap-4 justify-center py-1"><blockquote class="text-[13px] text-gray-600 font-medium bg-gray-50 rounded-lg w-full mx-0 px-4 py-2 text-left border border-gray-100">${content}</blockquote></div>`
-        }
+        return `<blockquote class="text-[14px] leading-[1.8] text-[#4B5563] italic mb-4 pl-5 border-l-[3px] border-[#9CA3AF] py-1 font-serif">${content}</blockquote>`
       }
       if (/^\d+\./.test(trimmedLine)) {
         const match = trimmedLine.match(/^(\d+)\.\s*(.+)$/)
         if (match) {
           let content = match[2];
-          content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#111827]">$1</span>');
-          return `<div class="flex gap-2.5 mb-2.5 items-start text-justify group"><span class="font-mono text-[14px] font-bold text-white shrink-0 leading-5 mt-0.5 bg-[#111827] w-5 h-5 flex items-center justify-center rounded-full text-[11px] shadow-sm">${match[1]}</span><p class="text-[13px] leading-snug text-[#374151] font-normal tracking-wide pt-0">${content}</p></div>`
+          content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#000000]">$1</span>');
+          return `<div class="flex gap-3 mb-2 items-start text-justify group font-serif"><span class="font-sans text-[12px] font-bold text-white shrink-0 leading-5 mt-1 bg-[#111827] w-5 h-5 flex items-center justify-center rounded-full text-[10px] shadow-sm">${match[1]}</span><p class="text-[14px] leading-[1.8] text-[#1F2937] font-normal tracking-wide pt-0">${content}</p></div>`
         }
       }
       // Regular paragraph
-      let content = line; // Maintain original whitespace for paragraphs if needed, but usually trimming is fine for display
-      content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#111827]">$1</span>');
-      return `<p class="${isFirstPage ? "text-[13px] leading-relaxed text-[#4b5563] mb-0 text-justify" : "text-[13px] leading-snug mb-2.5 text-[#374151] text-justify"} font-normal tracking-wide">${content}</p>`
+      let content = line; 
+      content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#000000]">$1</span>');
+      return `<p class="text-[14px] leading-[1.8] text-[#1F2937] mb-3 text-justify tracking-wide font-normal font-serif">${content}</p>`
     }
 
     // Deep Template Styles (Match DeepReadingCard)
@@ -139,8 +139,8 @@ export default function Home() {
 
     // Dynamic Height Calculation based on Template
     // Adjusted: Increased slightly to allow one more line at bottom (435px), while cover has reduced height due to top spacing check
-    const SAFE_HEIGHT_PAGE_1 = template === 'classic' ? 260 : 430; // Increased from 410 to 430 to allow more content on cover
-    const SAFE_HEIGHT_PAGE_N = template === 'classic' ? 420 : 435; // Increased from 420 to allow more text
+    const SAFE_HEIGHT_PAGE_1 = template === 'classic' ? 455 : 430; // Classic Cover: Reduced font size allows for more content height relative to container
+    const SAFE_HEIGHT_PAGE_N = template === 'classic' ? 465 : 435; // Classic Page N: Extreme optimization, close to bottom edge
 
     // Pre-process: Split by paragraphs first
     const rawParagraphs = fullText.split('\n');
@@ -415,8 +415,8 @@ export default function Home() {
         className="fixed top-0 left-0 pointer-events-none opacity-0 z-[-1] flex flex-col"
         style={{
           width: '375px', // Same as card width
-          paddingLeft: '32px', // px-8
-          paddingRight: '32px', // px-8
+          paddingLeft: '24px', // px-6
+          paddingRight: '24px', // px-6
         }}
       >
         {/* Content will be injected here for measurement */}
