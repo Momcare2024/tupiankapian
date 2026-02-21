@@ -2,12 +2,35 @@
 
 export const dynamic = 'force-dynamic'
 
+// TypeScript 类型声明：支持 File System Access API
+declare global {
+  interface Window {
+    showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>
+  }
+
+  interface FileSystemDirectoryHandle {
+    getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>
+  }
+
+  interface FileSystemFileHandle {
+    createWritable(): Promise<FileSystemWritableFileStream>
+  }
+
+  interface FileSystemWritableFileStream extends WritableStream {
+    write(data: Blob | ArrayBuffer | string): Promise<void>
+    close(): Promise<void>
+  }
+}
+
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { CardPreview } from "@/components/card-preview"
 import { DeepReadingCard } from "@/components/deep-reading-card"
+import { CalmBlueCard } from "@/components/calm-blue-card"
+import { FreshGreenCard } from "@/components/fresh-green-card"
+import { ElegantPurpleCard } from "@/components/elegant-purple-card"
 import { Loader2, Download, LayoutTemplate, BookOpen, UserCircle, PenTool, Sparkles } from "lucide-react"
 import { toPng } from "html-to-image"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -16,7 +39,7 @@ export default function Home() {
   const [mode, setMode] = useState<'ai' | 'custom'>('ai')
   const [customContent, setCustomContent] = useState("")
   const [title, setTitle] = useState("")
-  const [template, setTemplate] = useState<'classic' | 'deep'>('classic')
+  const [template, setTemplate] = useState<'classic' | 'deep' | 'calm-blue' | 'fresh-green' | 'elegant-purple'>('classic')
   const [persona, setPersona] = useState('parenting')
   const [cards, setCards] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
@@ -69,13 +92,13 @@ export default function Home() {
         }
       }
       // Regular paragraph
-      let content = line; 
+      let content = line;
       content = content.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-[#000000]">$1</span>');
       content = content.replace(/\*\*/g, ''); // Clean stray **
       return `<p class="text-[13px] leading-[1.8] text-[#1F2937] mb-3 text-justify tracking-wide font-normal font-serif">${content}</p>`
     }
 
-    // Deep Template Styles (Match DeepReadingCard)
+    // Deep & New Templates Styles (Match DeepReadingCard and new color templates)
     // H1 - Match DeepReadingCard (Added mt-6 for more top spacing)
     if (/^#\s*/.test(trimmedLine) && !/^##/.test(trimmedLine)) {
       const content = trimmedLine.replace(/^#\s*/, '');
@@ -147,8 +170,8 @@ export default function Home() {
 
     // Dynamic Height Calculation based on Template
     // Adjusted: Increased slightly to allow one more line at bottom (435px), while cover has reduced height due to top spacing check
-    const SAFE_HEIGHT_PAGE_1 = template === 'classic' ? 430 : 440; // Classic: 430 (13px font), Deep: 440
-    const SAFE_HEIGHT_PAGE_N = template === 'classic' ? 465 : 460; // Classic: 465 (13px font), Deep: 460
+    const SAFE_HEIGHT_PAGE_1 = template === 'classic' ? 430 : 440; // Classic: 430 (13px font), Deep/New: 440
+    const SAFE_HEIGHT_PAGE_N = template === 'classic' ? 465 : 460; // Classic: 465 (13px font), Deep/New: 460
 
     // Pre-process: Split by paragraphs first
     const rawParagraphs = fullText.split('\n');
@@ -391,7 +414,10 @@ export default function Home() {
       const dataUrl = await toPng(cardElement, {
         cacheBust: true,
         pixelRatio: 3, // 保持高清
-        backgroundColor: template === 'deep' ? "#FAF8F3" : "#ffffff", // 更新为极浅暖白色背景
+        backgroundColor: template === 'deep' ? "#FAF8F3" :
+                       template === 'calm-blue' ? "#E8F4FD" :
+                       template === 'fresh-green' ? "#F0FDF4" :
+                       template === 'elegant-purple' ? "#FAF5FF" : "#ffffff",
       })
 
       const link = document.createElement("a")
@@ -409,9 +435,70 @@ export default function Home() {
   const handleDownloadAll = async () => {
     if (cards.length === 0) return
 
-    for (let i = 0; i < cards.length; i++) {
-      await handleDownloadCard(i)
-      await new Promise((resolve) => setTimeout(resolve, 300))
+    setDownloadingIndex(0) // 设置为 0 表示开始批量下载
+
+    try {
+      // 检查浏览器是否支持 File System Access API
+      if (!('showDirectoryPicker' in window)) {
+        alert('您的浏览器不支持文件夹选择功能，将使用默认下载方式。请使用 Chrome 或 Edge 浏览器体验此功能。')
+        // 降级到原有方式
+        for (let i = 0; i < cards.length; i++) {
+          await handleDownloadCard(i)
+          await new Promise((resolve) => setTimeout(resolve, 300))
+        }
+        return
+      }
+
+      // 让用户选择文件夹
+      const dirHandle = await window.showDirectoryPicker({
+        mode: 'readwrite',
+      })
+
+      // 生成所有卡片图片并保存到选择的文件夹
+      for (let i = 0; i < cards.length; i++) {
+        const cardElement = document.getElementById(`card-${i}`)
+        if (!cardElement) continue
+
+        // 更新下载状态
+        setDownloadingIndex(i)
+
+        // 生成图片
+        const dataUrl = await toPng(cardElement, {
+          cacheBust: true,
+          pixelRatio: 3, // 保持高清
+          backgroundColor: template === 'deep' ? "#FAF8F3" :
+                         template === 'calm-blue' ? "#E8F4FD" :
+                         template === 'fresh-green' ? "#F0FDF4" :
+                         template === 'elegant-purple' ? "#FAF5FF" : "#ffffff",
+        })
+
+        // 将 dataUrl 转换为 Blob
+        const response = await fetch(dataUrl)
+        const blob = await response.blob()
+
+        // 在文件夹中创建文件
+        const fileHandle = await dirHandle.getFileHandle(`card-${i + 1}.png`, { create: true })
+        const writable = await fileHandle.createWritable()
+
+        // 写入数据
+        await writable.write(blob)
+        await writable.close()
+
+        // 稍微延迟，避免操作过快
+        await new Promise((resolve) => setTimeout(resolve, 100))
+      }
+
+      alert(`已成功保存 ${cards.length} 张卡片到选定文件夹！`)
+
+    } catch (error) {
+      if ((error as Error).name === 'AbortError') {
+        console.log('用户取消了文件夹选择')
+      } else {
+        console.error("Download error:", error)
+        alert("下载失败，请重试")
+      }
+    } finally {
+      setDownloadingIndex(null)
     }
   }
 
@@ -491,6 +578,36 @@ export default function Home() {
                     >
                       <BookOpen className="w-4 h-4" />
                       <span className="text-sm font-medium">深度解析模版</span>
+                    </button>
+                    <button
+                      onClick={() => setTemplate('calm-blue')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${template === 'calm-blue'
+                        ? 'border-sky-500 bg-sky-50 text-sky-700 ring-1 ring-sky-500'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                        }`}
+                    >
+                      <div className="w-4 h-4 rounded-full bg-[#E8F4FD] border border-sky-300" />
+                      <span className="text-sm font-medium">宁静蓝模版</span>
+                    </button>
+                    <button
+                      onClick={() => setTemplate('fresh-green')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${template === 'fresh-green'
+                        ? 'border-green-500 bg-green-50 text-green-700 ring-1 ring-green-500'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                        }`}
+                    >
+                      <div className="w-4 h-4 rounded-full bg-[#F0FDF4] border border-green-300" />
+                      <span className="text-sm font-medium">清新绿模版</span>
+                    </button>
+                    <button
+                      onClick={() => setTemplate('elegant-purple')}
+                      className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-all ${template === 'elegant-purple'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 ring-1 ring-purple-500'
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-600'
+                        }`}
+                    >
+                      <div className="w-4 h-4 rounded-full bg-[#FAF5FF] border border-purple-300" />
+                      <span className="text-sm font-medium">优雅紫模版</span>
                     </button>
                   </div>
                 </div>
@@ -651,8 +768,14 @@ export default function Home() {
                       <div id={`card-${index}`} className="shadow-lg rounded-lg overflow-hidden">
                         {template === 'classic' ? (
                           <CardPreview content={card} index={index} total={cards.length} />
-                        ) : (
+                        ) : template === 'deep' ? (
                           <DeepReadingCard content={card} index={index} total={cards.length} />
+                        ) : template === 'calm-blue' ? (
+                          <CalmBlueCard content={card} index={index} total={cards.length} />
+                        ) : template === 'fresh-green' ? (
+                          <FreshGreenCard content={card} index={index} total={cards.length} />
+                        ) : (
+                          <ElegantPurpleCard content={card} index={index} total={cards.length} />
                         )}
                       </div>
                     </div>
